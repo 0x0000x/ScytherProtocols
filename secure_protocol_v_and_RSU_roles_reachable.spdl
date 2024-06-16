@@ -1,0 +1,84 @@
+# Declared UserTypes
+usertype Timestamp;
+
+# Defined Variables
+const finalAck: Nonce; 
+
+# Defined hash functions
+hashfunction h;
+
+protocol SecureProtocol(V, RSU, O) {
+
+    // Vehicle sends its data to RSU
+	macro m1 = {vMsg, license,problem,h(ts),V,O}pk(RSU);
+	// RSU sends the Vehicle data to O
+	macro m2 = {vMsg, rsuMsg,license,problem,h(ts2), RSU, V}pk(O);
+	// ack message to Vehicle
+	macro m3 = {vMsg, rsuMsg, ack, RSU, O}pk(V);
+	// ack message by Vehicle sent to RSU
+	macro m4 =  ({ack}rsuMsg);
+	// 
+	macro m5 =  ({finalAck}ack);
+
+    # Vehicle
+	role V {
+		var rsuMsg, ack: Nonce; 
+		fresh vMsg: Nonce; 
+
+		fresh license,problem:Nonce;
+		fresh ts: Timestamp;
+
+		send_1(V, RSU, m1);
+		recv_3(O, V, m3);
+		
+		send_4(V, RSU,m4);
+
+		claim(V, Niagree);
+		claim(V, Nisynch);
+		claim(V, Secret, vMsg);
+
+	}
+
+    # RoadSide Unit 
+	role RSU {
+		var   vMsg, ack: Nonce;
+		fresh rsuMsg: Nonce;
+
+		var license,problem:Nonce;
+		var ts: Timestamp;
+		fresh ts2:Timestamp;
+
+		recv_1(V, RSU, m1); 
+		
+		send_2(RSU, O, m2); 
+		
+
+		recv_4(V, RSU,m4);
+		send_5(RSU, O,m5);
+	
+		claim(RSU, Niagree);
+		claim(RSU, Nisynch);
+		claim(RSU, Secret, rsuMsg);
+
+	}
+
+    # Operation 911
+	role O {
+		var   rsuMsg, vMsg : Nonce;
+		fresh ack : Nonce; 
+		var license,problem:Nonce; 
+		var ts2: Timestamp; 
+     	recv_2(RSU, O,m2);
+		
+		send_3(O, V, m3);
+		
+
+
+		recv_5(RSU, O, m5);
+		match(RSU,h(ts2));
+
+		claim(O, Niagree);
+		claim(O, Nisynch);
+		claim(O, Secret, h(ts2));
+	}	
+}

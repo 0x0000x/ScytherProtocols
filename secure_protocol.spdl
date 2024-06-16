@@ -1,0 +1,120 @@
+# Defined types
+usertype Timestamp;
+usertype License;
+usertype Problem;
+usertype Message;
+// usertype ControlMessage;
+
+
+# Declared h functions
+hashfunction h;
+// const pk2: Function;
+// secret sk2: Function;
+// inversekeys(pk2, sk2);
+
+// secret xor : Function ;
+
+protocol SecureProtocol(V,RSU,O)
+{ 
+
+    
+    # Vehicle role
+   role V
+   {
+
+      fresh license: License;
+      fresh problem: Problem;
+      fresh ts1: Timestamp;
+
+      const m1: Message;
+    var ts4: Timestamp;
+
+    var CM: Nonce;
+
+      send_1(V, RSU,   license, problem, h(ts1),{Message(V)}pk(RSU));
+    //   send_2(V,RSU,{Message(m1)}pk(RSU));
+
+
+       recv_5(O, V, CM,ts4);
+      
+
+    //   recv_4(O, V,{m1}pk(V,RSU));
+
+      claim(V, Secret, ts1);
+   
+      claim(V,Niagree);
+      claim(V,Nisynch);
+
+   }
+
+
+    # RSU role
+    role RSU
+    {
+
+
+      var ts1: Timestamp;
+      fresh ts2: Timestamp;
+
+      var license: License;
+      var problem: Problem;
+
+
+      var m1: Message;
+      fresh m2: Message;
+
+      recv_1(V, RSU,   license, problem, h(ts1),{Message(V)}pk(RSU));
+    //   recv_2(V,RSU,{Message(m1)}pk(RSU));
+
+      match(h(ts1),h(ts1));
+     
+
+
+      send_3(RSU, O, license,problem,h(ts2));
+    //    send_4(RSU, O,{Message(m1),Message(m2)}pk(O));
+       claim(RSU, Running, RSU,license,problem,h(ts2));
+
+    //   recv_3(O, RSU,{m1}pk(O,RSU));
+
+      
+
+
+      claim(RSU, Secret, ts2);
+      claim(RSU,Niagree);
+      claim(RSU,Nisynch);
+      //   claim(RSU,Commit,V,ts2);
+    }
+
+# Operation911 role
+    role O
+    {
+      var ts2: Timestamp;    // Timestamp 2
+
+      var license: License;
+      var problem: Problem;
+      var m1: Message;
+      var m2: Message;
+
+       fresh ts4: Timestamp;
+
+       fresh CM: Nonce;
+
+    //   recv_2(RSU, O,{ license,problem,h(ts2)}pk(RSU));
+     
+
+       recv_3(RSU, O, license,problem,h(ts2));
+        // recv_4(RSU, O,{Message(m1),Message(m2)}pk(O));
+
+        match(h(ts2), h(ts2));
+
+      send_5(O, V, CM,ts4);
+    //   send_4(O, V,{m1}pk(V,RSU));
+
+      
+      claim(O,Niagree);
+      claim(O,Nisynch);
+    //   claim(O,Commit,RSU,license,problem,h(ts2));
+    }
+
+
+}
